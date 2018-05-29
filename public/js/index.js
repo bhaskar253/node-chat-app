@@ -26,3 +26,16 @@ jQuery('#message-form').on('submit', function(e){
 
   });
 });
+
+var locationButton = jQuery('#send-location');
+locationButton.on('click',function (e) {
+  if (!navigator.geolocation)  {
+  console.log('geolocation IS NOT available');
+  }
+  navigator.geolocation.getCurrentPosition(function(position) {
+    //console.log(position);
+    alert(position);
+  }, function () {
+    alert('Unable to fetch location.')
+  });
+});
