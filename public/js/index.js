@@ -33,8 +33,7 @@ locationButton.on('click',function (e) {
   console.log('geolocation IS NOT available');
   }
   navigator.geolocation.getCurrentPosition(function(position) {
-    //console.log(position);
-    alert(position);
+    console.log(position);
   }, function () {
     alert('Unable to fetch location.')
   });
