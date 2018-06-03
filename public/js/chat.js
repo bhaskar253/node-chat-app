@@ -1,7 +1,12 @@
 var socket = io();
 
-function scrollToBottom() {
-  //Selectors
+var messageCounter = 0;
+var favicon=new Favico({
+    animation:'popFade'
+});
+
+function scrollToBottom(){
+  //selectors
   var messages = jQuery('#messages');
   var newMessage = messages.children('li:last-child');
   //Heights
@@ -10,97 +15,145 @@ function scrollToBottom() {
   var scrollHeight = messages.prop('scrollHeight');
   var newMessageHeight = newMessage.innerHeight();
   var lastMessageHeight = newMessage.prev().innerHeight();
+  var lastLastMessageHeight = newMessage.prev().prev().innerHeight();
 
-  if(clientHeight+scrollTop+newMessageHeight+lastMessageHeight>=scrollHeight){
+  if(clientHeight + scrollTop + newMessageHeight + lastMessageHeight + lastLastMessageHeight >= scrollHeight){
     messages.scrollTop(scrollHeight);
   }
+};
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
-socket.on('connect',function (){
+socket.on('connect',function(){
   var params = jQuery.deparam(window.location.search);
-  socket.emit('join', params, function (err) {
-    if(err){
-      alert(err);
+
+  socket.emit('join',params, function(error){
+    if(error){
+      alert(error);
       window.location.href = '/';
-    }else{
+    } else{
+      document.title = `${capitalizeFirstLetter(params.room)} | ChatApp`;
       console.log('No error');
     }
   });
 });
 
-socket.on('disconnect',function (){
-  console.log('Disconnected from server');
+socket.on('disconnect',function(){
+  console.log('Disconnected from server.');
 });
 
-socket.on('updateUserList',function(users) {
+socket.on('updateUserList', function(users){
   var ol = jQuery('<ol></ol>');
-  users.forEach(function (user) {
+
+  users.forEach(function(user){
     ol.append(jQuery('<li></li>').text(user));
   });
+
   jQuery('#users').html(ol);
 });
 
-socket.on('newMessage', function (message){
-  var formattedTime = moment(message.createdAt).format('h:mm a');
+socket.on('newMessage',function(message){
+  console.log('New message',message);
+  var timestamp = moment(message.createdAt).format('h:mm a');
+
   var template = jQuery('#message-template').html();
   var html = Mustache.render(template,{
-    text: message.text,from: message.from, createdAt: formattedTime
+    from: message.from,
+    text: message.text,
+    createdAt: timestamp
   });
 
-  jQuery('#messages').append(html);
-  scrollToBottom();
-  // var formattedTime = moment(message.createdAt).format('h:mm a');
-  // console.log('newMessage',message);
+ jQuery('#messages').append(html);
+ scrollToBottom();
+ displayMessageCountInTab();
+//  document.getElementById(id).scrollIntoView();
   // var li = jQuery('<li></li>');
-  // li.text(`${message.from} ${formattedTime}: ${message.text}`);
+  // li.text(`${message.from} ${timestamp}: ${message.text}`);
   //
   // jQuery('#messages').append(li);
 });
 
-socket.on('newLocationMessage', function (message) {
-  var formattedTime = moment(message.createdAt).format('h:mm a');
+socket.on('newLocationMessage',function(message){
+  console.log('New Location message',message);
+  var timestamp = moment(message.createdAt).format('h:mm a');
+
   var template = jQuery('#location-message-template').html();
   var html = Mustache.render(template,{
-    url: message.url,from: message.from, createdAt: formattedTime
+    from: message.from,
+    url: message.url,
+    createdAt: timestamp
   });
+
   jQuery('#messages').append(html);
   scrollToBottom();
-  // var formattedTime = moment(message.createdAt).format('h:mm a');
+  displayMessageCountInTab();
   // var li = jQuery('<li></li>');
-  // var a = jQuery(`<a target="_blank">My current location</a>`);
+  // var a = jQuery('<a target="_blank">My current location</a>');
   //
-  // li.text(`${message.from} ${formattedTime}: `);
+  // li.text(`${message.from} ${timestamp}: `);
   // a.attr('href',message.url);
   // li.append(a);
   // jQuery('#messages').append(li);
 });
 
-jQuery('#message-form').on('submit', function(e){
+//Acknowledgement using callback
+// socket.emit('createMessage',{
+//   from:'Franz',
+//   text:'Hi!'
+// }, function(data){
+//   console.log('Got it.',data);
+// });
+
+jQuery('#message-form').on('submit',function(e){
   e.preventDefault();
+
   var messageTextbox = jQuery('[name=message]');
+
   socket.emit('createMessage',{
-    text: messageTextbox.val()
-  },function () {
+    text:jQuery('[name=message]').val()
+  },function(){
     messageTextbox.val('');
   });
 });
 
 var locationButton = jQuery('#send-location');
-locationButton.on('click',function (e) {
-  if (!navigator.geolocation)  {
-  return alert('geolocation not supported in this browser.');
+
+locationButton.on('click',function(e){
+  console.log('Inside the click event on send-location button.');
+
+  locationButton.attr('disabled',true).text('Sending location...');
+
+  if(!navigator.geolocation){
+    return alert('Geolocation not supported by your browser.');
   }
 
-  locationButton.attr('disabled','disabled').text('Sending location ...');
-
-  navigator.geolocation.getCurrentPosition(function(position) {
-    locationButton.removeAttr('disabled').text('Send location');
+  navigator.geolocation.getCurrentPosition(function(position){
+    locationButton.attr('disabled',false).text('Send location');
     socket.emit('createLocationMessage',{
       latitude: position.coords.latitude,
       longitude: position.coords.longitude
     });
-  }, function () {
-    locationButton.removeAttr('disabled').text('Send location');
-    alert('Unable to fetch location.')
-  });
+  },function(){
+    locationButton.attr('disabled',false).text('Send location');
+    alert('Unable to fetch location.');
+  })
+});
+
+function displayMessageCountInTab(){
+  if(!document.hasFocus()){
+    favicon.badge(++messageCounter);
+  }
+};
+
+function clearMessageCount(){
+  messageCounter=0;
+  favicon.badge(messageCounter);
+};
+
+$(window).focus(function(e){
+  if(messageCounter>0){
+    clearMessageCount();
+  }
 });

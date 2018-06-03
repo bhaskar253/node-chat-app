@@ -24,5 +24,10 @@ class Users {
   getUserList (room) {
     return this.users.reduce((names,user)=>user.room===room && names.push(user.name) && names || names,[]);
   }
+  isNameTaken(name,room){
+    var user = this.users.find(user => (name===user.name && room===user.room));
+    return user?true:false;
+  }
 }
-module.exports = {Users};
+
+module.exports= {Users};

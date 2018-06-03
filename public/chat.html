@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset = "utf-8">
     <title>Chat | ChatApp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <link rel="stylesheet" href="/css/styles.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link id="favicon" rel="shortcut icon" type="image/png" href="/images/chat.png">
   </head>
+
   <body class="chat">
+
     <div class="chat__sidebar">
       <h3>People</h3>
-      <div id="users">
-        
-      </div>
+      <div id="users"></div>
     </div>
 
     <div class="chat__main">
@@ -19,11 +20,12 @@
 
       <div class="chat__footer">
         <form id="message-form">
-          <input type="text" name="message" placeholder="Message" autofocus autocomplete="off">
+          <input name="message" type="text" placeholder="Message" required autofocus autocomplete="off"/>
           <button>Send</button>
         </form>
         <button id="send-location">Send location</button>
       </div>
+
     </div>
 
     <script id="message-template" type="text/template">
@@ -45,7 +47,9 @@
           <span>{{createdAt}}</span>
         </div>
         <div class="message__body">
-          <p><a target="_blank" href="{{url}}">My current location</a></p>
+          <p>
+            <a href="{{url}}" target="_blank">My current location</a>
+          </p>
         </div>
       </li>
     </script>
@@ -55,6 +59,7 @@
     <script src="/js/libs/moment.js"></script>
     <script src="/js/libs/mustache.js"></script>
     <script src="/js/libs/deparam.js"></script>
-    <script src="/js/chat.js"></script>
+    <script src="/js/libs/favico.js"></script>
+    <script src="js/chat.js"></script>
   </body>
 </html>
